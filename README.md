@@ -23,17 +23,16 @@ sudo apt install git
 
 ```
 
-# Django Web Framework
+Django Web Framework
 django==3.2.5
 
-_# Django Cors Headers - Used to enable CORS headers in API responses,
-_# and allow requests to be made to your API server from other origins.
+Django Cors Headers - Used to enable CORS headers in API responses, and allow requests to be made to your API server from other origins.
 **django-cors-headers==3.5.0**
 
-# Django Rest Framework - Api Logic
+Django Rest Framework - Api Logic
 **djangorestframework==3.12.4**
 
-# MySQL Client - Used as an interface to connect Django application to the MySQL server.
+MySQL Client - Used as an interface to connect Django application to the MySQL server.
 **mysqlclient==2.0.3_**
 
 
