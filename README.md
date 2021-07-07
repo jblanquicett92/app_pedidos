@@ -41,10 +41,10 @@ PSQL Client - Used as an interface to connect Django application to the POSTGRES
 
 _Ejecuta:
 
-_docker build._
-_docker-compose build_
-_docker-compose run app sh -c "python manage.py test"_
-_docker-compose up_
+#####docker build .
+#####docker-compose build
+#####docker-compose run app sh -c "python manage.py test"
+#####docker-compose up
 
 
 
