@@ -4,7 +4,7 @@ _PRUEBA DE PROGRAMACIÓN
 
 ## Inicio 🚀
 
-_Backend de sistema de pedidos recibidos desde clientes ._
+_Backend de sistema de pedidos recibidos desde clientes._
 
 Mira **Deployment** para conocer como desplegar el proyecto.
 
@@ -37,14 +37,14 @@ PSQL Client - Used as an interface to connect Django application to the POSTGRES
 **psycopg2>=2.7.5, <2.8.0_**
 
 
-### Instalación 🔧
+### Deployment 🔧
 
-__Ejecuta:
+_Ejecuta:
 
-docker build .
-docker-compose build
-docker-compose run app sh -c "python manage.py test"
-docker-compose up
+_docker build._
+_docker-compose build_
+_docker-compose run app sh -c "python manage.py test"_
+_docker-compose up_
 
 
 
