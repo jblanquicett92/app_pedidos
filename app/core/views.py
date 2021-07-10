@@ -1,12 +1,16 @@
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializer import Tipo_clienteSerializer, ClienteSerializer, ArticuloSerializer, ProveedorSerializer
 from .serializer import Empresa_asociadaSerializer, SucursalSerializer, Centro_distribucionSerializer
 from .serializer import PedidoSerializer, DetallePedidoSerializer, Articulo_en_proveedorSerializer
+from .serializer import Proveedor_tiene_articuloSerializer
 
 from .models import Tipo_cliente, Cliente, Articulo, Proveedor, Empresa_asociada
 from .models import Sucursal, Centro_distribucion, Pedido, Detalle_pedido
+
+from django.db import connection
 
 
 class Centro_distribucionView(APIView):
@@ -259,44 +263,116 @@ class Articulo_en_proveedorView(APIView):
     def get(self, request, id=None):
 
         if id:
-            detalle_pedido = Detalle_pedido.objects.filter(fk_articulo=id)
-            serializer = Articulo_en_proveedorSerializer(detalle_pedido,  many=True)
-            return Response(serializer.data)
+            try:
+                articulo = Articulo.objects.get(id_articulo=id)
+            except Articulo.DoesNotExist:
+                return Response({'status': 'No existe el articulo'}, status=400)
+            sql = f'''SELECT
+			    DISTINCT prov.id_proveedor, prov.nombre, prov.direccion
+                FROM  core_detalle_pedido as dp
+                    INNER JOIN core_detalle_pedido_fk_articulo as dp_art_fk
+                    ON dp.id_detalle_pedido=dp_art_fk.detalle_pedido_id
+                    INNER JOIN core_detalle_pedido_fk_proveedor as dp_prov_fk
+                    ON dp_prov_fk.detalle_pedido_id = dp.id_detalle_pedido
+                    INNER JOIN core_proveedor as prov
+                    ON prov.id_proveedor = dp_prov_fk.proveedor_id
+		        WHERE dp_art_fk.articulo_id ={id}'''
+
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            if cursor.rowcount!=0:
+                articulos_en_proveedor = []
+                for p in cursor.fetchall():
+                    proveedor = {
+                        "id_proveedor": p[0],
+                        "nombre": p[1],
+                        "direccion": p[2]
+                    }
+                    articulos_en_proveedor.append(proveedor)
+
+                return Response({'proveedor': articulos_en_proveedor})
+            return Response({'status': 'el articulo no es surtido por ningun proveedor'})
         else:
-            detalle_pedido = Detalle_pedido.objects.all()
-            serializer = Articulo_en_proveedorSerializer(detalle_pedido, many=True)
-            return Response(serializer.data)
+            return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
+
 
     def post(self, request, *args, **kwargs):
 
         detalle_datos = request.data
 
-
-#        print(proveedor)
-#        print(detalle_datos['fk_articulo'])
-
         nuevo_detalle = Detalle_pedido()
         nuevo_detalle.save()
-        proveedor = Proveedor.objects.get(id_proveedor=detalle_datos['fk_proveedor'])
-        nuevo_detalle.fk_proveedor.add(proveedor)
 
+        proveedor = Proveedor.objects.get(id_proveedor=detalle_datos['fk_proveedor'])
+        print(proveedor)
+        nuevo_detalle.fk_proveedor.add(proveedor)
 
         for art in detalle_datos['fk_articulo']:
             articulo = Articulo.objects.get(id_articulo=art['fk_articulo'])
             print(articulo)
             nuevo_detalle.fk_articulo.add(articulo)
 
+        serializer = Articulo_en_proveedorSerializer(nuevo_detalle)
 
-        serializer = ArticuloSerializer(nuevo_detalle)
-        print(serializer)
         return Response(serializer.data)
 
 
 class Proveedor_tiene_articuloView(APIView):
-    class_serializer = DetallePedidoSerializer
+    class_serializer = Proveedor_tiene_articuloSerializer
 
     def get(self, request, id=None):
-        pass
+
+        if id:
+            try:
+                proveedor = Proveedor.objects.get(id_proveedor=id)
+            except Proveedor.DoesNotExist:
+                return Response({'status': 'No existe el proveedor'}, status=400)
+            sql = f'''SELECT 
+                        DISTINCT art.id_articulo, art.codigo, art.descripcion, art.precio
+                        FROM  core_detalle_pedido as dp
+                        INNER JOIN core_detalle_pedido_fk_articulo as dp_art_fk
+                        ON dp.id_detalle_pedido=dp_art_fk.detalle_pedido_id
+                        INNER JOIN core_detalle_pedido_fk_proveedor as dp_prov_fk 
+                        ON dp_prov_fk.detalle_pedido_id = dp.id_detalle_pedido 
+                        INNER JOIN core_articulo as art
+                        ON art.id_articulo = dp_art_fk.articulo_id
+            		WHERE dp_prov_fk.proveedor_id={id};'''
+
+            cursor = connection.cursor()
+            cursor.execute(sql)
+            if cursor.rowcount!=0:
+                proveedor_tiene_articulos = []
+                for a in cursor.fetchall():
+                    articulos = {
+                        "id_articulo": a[0],
+                        "codigo": a[1],
+                        "descripcion": a[2],
+                        "precio": a[3]
+                    }
+                    proveedor_tiene_articulos.append(articulos)
+
+                return Response({'articulos': proveedor_tiene_articulos})
+            return Response({'status': 'proveedor no surte ningun articulo'})
+        else:
+            return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
+
 
     def post(self, request, *args, **kwargs):
-        pass
+
+        detalle_datos = request.data
+
+        nuevo_detalle = Detalle_pedido()
+        nuevo_detalle.save()
+
+        articulo = Articulo.objects.get(id_articulo=detalle_datos['fk_articulo'])
+        print(articulo)
+        nuevo_detalle.fk_articulo.add(articulo)
+
+        for prv in detalle_datos['fk_proveedor']:
+            proveedor = Proveedor.objects.get(id_proveedor=prv['fk_proveedor'])
+            print(proveedor)
+            nuevo_detalle.fk_proveedor.add(proveedor)
+
+        serializer = Proveedor_tiene_articuloSerializer(nuevo_detalle)
+
+        return Response(serializer.data)

@@ -27,4 +27,13 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=supersecretpassword
 
+  pgadmin:
+    image: dpage/pgadmin4
+    depends_on:
+      - db
+    ports:
+      - "8889:80"
 
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: root

@@ -19,8 +19,8 @@ urlpatterns = [
     path('centro_distribucion/<int:id>', views.Centro_distribucionView.as_view()),
     path('detalle_pedido/', views.Detalle_PedidoView.as_view()),
     path('detalle_pedido/<int:id>', views.Detalle_PedidoView.as_view()),
-    path('proveedor_tiene_articulo/', views.Proveedor_tiene_articuloView.as_view()),
     path('proveedor_tiene_articulo/<int:id>', views.Proveedor_tiene_articuloView.as_view()),
+    path('proveedor_tiene_articulo/', views.Proveedor_tiene_articuloView.as_view()),
     path('articulo_en_proveedor/', views.Articulo_en_proveedorView.as_view()),
     path('articulo_en_proveedor/<int:id>', views.Articulo_en_proveedorView.as_view()),
 

@@ -70,6 +70,14 @@ class Articulo_en_proveedorSerializer(serializers.ModelSerializer):
         fields = ("fk_proveedor", 'fk_articulo')
 
         depth = 1
+#Proveedor_tiene_articuloSerializer
+class Proveedor_tiene_articuloSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Detalle_pedido
+        fields = ("fk_proveedor", 'fk_articulo')
+
+        depth = 1
 
 
 
