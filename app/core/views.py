@@ -338,7 +338,9 @@ class PedidoView(APIView):
         nuevo_pedido.save()
 
         nuevo_detalle = Detalle_pedido(
-            fk_pedido=nuevo_pedido
+            fk_pedido=nuevo_pedido,
+            fk_cliente=nuevo_pedido.fk_cliente
+
         )
         nuevo_detalle.save()
 
