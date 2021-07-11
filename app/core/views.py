@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -264,39 +265,11 @@ class ProveedorView(APIView):
         return Response(serializer.data)
 
 
-class PedidoView(APIView):
-    class_serializer = PedidoSerializer
-    #class_serializer_2 = DetallePedidoSerializer
 
-    def get(self, request, id=None):
-        if id:
-            try:
-                pedido = Pedido.objects.get(id_pedido=id)
-            except Pedido.DoesNotExist:
-                return Response({'status': 'no existe ese pedido'}, status=400)
-            serializer = PedidoSerializer(pedido)
-            return Response(serializer.data)
-        else:
-            pedido = Pedido.objects.all()
-            serializer = PedidoSerializer(pedido, many=True)
-            return Response(serializer.data)
+class Crear_Nuevo_PedidoViewSet(viewsets.ModelViewSet):
 
-    def put(self, request, id=None, *args, **kwargs):
-        try:
-            pedido = Pedido.objects.get(id_pedido=id)
-        except Pedido.DoesNotExist:
-            return Response({'status': 'no existe ese pedido'}, status=400)
 
-        pedido_datos = request.data
-
-        pedido.fecha_surte_pedido=pedido_datos['fecha_surte_pedido']
-        pedido.hora_surte_pedido=pedido_datos['hora_surte_pedido']
-
-        pedido.save()
-        serializer = PedidoSerializer(pedido)
-        return Response(serializer)
-
-    def post(self, request, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         datos_pedido = request.data
 
         print(datos_pedido)
@@ -356,6 +329,56 @@ class PedidoView(APIView):
 
         serializer = DetallePedidoSerializer(nuevo_detalle)
         return Response(serializer.data)
+
+class Listar_Pedido_UrgenteViewSet(APIView):
+
+    def get(self, request):
+        '''
+        relación de pedidos urgentes a Centros de distribución que
+        pertenezcan a cliente PLATINO y que aún no se han surtido
+        :param request:
+        :return: Pedido con relacion pedida
+        '''
+        pedido = Pedido.objects.filter(es_urgente=True,
+                                       fk_centro_distribucion__isnull=False,
+                                       fk_cliente__fk_tipo_cliente__id_tipo_cliente=4,
+                                       fecha_surte_pedido__isnull=True,
+                                       )
+
+        serializer = PedidoSerializer(pedido, many=True)
+        return Response(serializer.data)
+
+
+class PedidoView(APIView):
+    class_serializer = PedidoSerializer
+
+    def get(self, request, id=None):
+        if id:
+            try:
+                pedido = Pedido.objects.get(id_pedido=id)
+            except Pedido.DoesNotExist:
+                return Response({'status': 'no existe ese pedido'}, status=400)
+            serializer = PedidoSerializer(pedido)
+            return Response(serializer.data)
+        else:
+            pedido = Pedido.objects.all()
+            serializer = PedidoSerializer(pedido, many=True)
+            return Response(serializer.data)
+
+    def put(self, request, id=None, *args, **kwargs):
+        try:
+            pedido = Pedido.objects.get(id_pedido=id)
+        except Pedido.DoesNotExist:
+            return Response({'status': 'no existe ese pedido'}, status=400)
+
+        pedido_datos = request.data
+
+        pedido.fecha_surte_pedido=pedido_datos['fecha_surte_pedido']
+        pedido.hora_surte_pedido=pedido_datos['hora_surte_pedido']
+
+        pedido.save()
+        serializer = PedidoSerializer(pedido)
+        return Response(serializer)
 
 class Detalle_PedidoView(APIView):
     class_serializer = DetallePedidoSerializer
