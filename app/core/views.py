@@ -1,7 +1,9 @@
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import api_view
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from .serializer import Tipo_clienteSerializer, ClienteSerializer, ArticuloSerializer, ProveedorSerializer
 from .serializer import Empresa_asociadaSerializer, SucursalSerializer, Centro_distribucionSerializer
 from .serializer import PedidoSerializer, DetallePedidoSerializer, Articulo_en_proveedorSerializer
@@ -106,6 +108,7 @@ class Empresa_asociadaView(APIView):
 class tipo_clienteView(APIView):
     serializer_class = Tipo_clienteSerializer
 
+    @swagger_auto_schema(responses={200: Tipo_clienteSerializer(many=True)})
     def get(self, request, id=None):
         if id:
             try:
@@ -150,22 +153,16 @@ class clienteView(APIView):
     def post(self, request, *args, **kwargs):
         cliente_datos = request.data
 
-        try:
-            tipo_cliente = Tipo_cliente.objects.get(id_tipo_cliente=cliente_datos["fk_tipo_cliente"])
-        except Tipo_cliente.DoesNotExist:
-            return self.crear_usuario(cliente_datos["nombre"], cliente_datos["codigo"], cliente_datos["fotografia"],
-                                      cliente_datos["direccion"], None)
-        return self.crear_usuario(cliente_datos["nombre"], cliente_datos["codigo"], cliente_datos["fotografia"],
-                                  cliente_datos["direccion"], tipo_cliente)
-
-    def crear_usuario(self, nombre, codigo, fotografia, direccion, tipo_cliente):
+        tipo_cliente = Tipo_cliente.objects.get(id_tipo_cliente=cliente_datos["fk_tipo_cliente"])
 
         nuevo_cliente = Cliente(
-            nombre=nombre,
-            codigo=codigo,
-            fotografia=fotografia,
-            direccion=direccion,
+
+            nombre=cliente_datos["nombre"],
+            codigo=cliente_datos["codigo"],
+            fotografia=cliente_datos["fotografia"],
+            direccion=cliente_datos["direccion"],
             fk_tipo_cliente=tipo_cliente
+
         )
 
         nuevo_cliente.save()
@@ -173,9 +170,14 @@ class clienteView(APIView):
         return Response(serializer.data)
 
 
+
 class ArticuloView(APIView):
     serializer_class = ArticuloSerializer
 
+    user_response = openapi.Response(
+        'Si la consulta es / entrega una lista [] de lo contrario si es: /{id} un objeto { }', serializer_class)
+
+    @swagger_auto_schema(responses={200: user_response})
     def get(self, request, id=None):
 
         if id:
@@ -184,14 +186,40 @@ class ArticuloView(APIView):
             except Articulo.DoesNotExist:
                 return Response({'status': 'No existe el Articulo'}, status=400)
             serializer = ArticuloSerializer(articulo)
+
             return Response(serializer.data)
         else:
             articulos = Articulo.objects.all()
             serializer = ArticuloSerializer(articulos, many=True)
             return Response(serializer.data)
 
-    def post(self, request, *args, **kwargs):
+    test_param = openapi.Parameter('test', openapi.IN_QUERY, description="test manual param", type=openapi.TYPE_BOOLEAN)
+    user_response = openapi.Response('response description', ArticuloSerializer)
 
+    codigo = openapi.Parameter('codigo',
+                               in_=openapi.IN_QUERY,
+                               description='Indica clave alfanumerica con la que relacionaran la descripcion del equipo',
+                               type=openapi.TYPE_STRING,
+                               required=False
+                               )
+    descripcion = openapi.Parameter('descripcion',
+                                    in_=openapi.IN_QUERY,
+                                    description='Indica que articulo es, por ejemplo: Teclado, Laptop',
+                                    type=openapi.TYPE_STRING,
+                                    required=False
+                                    )
+    precio = openapi.Parameter('precio',
+                               in_=openapi.IN_QUERY,
+                               description='Valor numerico que represanta el costo del articulo',
+                               type=openapi.TYPE_INTEGER,
+                               required=False
+                               )
+    user_response = openapi.Response(
+        'Si la consulta es / entrega una lista [] de lo contrario si es: /{id} un objeto { }', serializer_class)
+
+    @swagger_auto_schema(manual_parameters=[codigo, descripcion, precio], responses={200: user_response})
+    def post(self, request, *args, **kwargs):
+        '''Servicio para crear un nuevo articulo'''
         articulo_datos = request.data
 
         nuevo_articulo = Articulo(
@@ -236,6 +264,97 @@ class ProveedorView(APIView):
         return Response(serializer.data)
 
 
+class PedidoView(APIView):
+    class_serializer = PedidoSerializer
+    #class_serializer_2 = DetallePedidoSerializer
+
+    def get(self, request, id=None):
+        if id:
+            try:
+                pedido = Pedido.objects.get(id_pedido=id)
+            except Pedido.DoesNotExist:
+                return Response({'status': 'no existe ese pedido'}, status=400)
+            serializer = PedidoSerializer(pedido)
+            return Response(serializer.data)
+        else:
+            pedido = Pedido.objects.all()
+            serializer = PedidoSerializer(pedido, many=True)
+            return Response(serializer.data)
+
+    def put(self, request, id=None, *args, **kwargs):
+        try:
+            pedido = Pedido.objects.get(id_pedido=id)
+        except Pedido.DoesNotExist:
+            return Response({'status': 'no existe ese pedido'}, status=400)
+
+        pedido_datos = request.data
+
+        pedido.fecha_surte_pedido=pedido_datos['fecha_surte_pedido']
+        pedido.hora_surte_pedido=pedido_datos['hora_surte_pedido']
+
+        pedido.save()
+        serializer = PedidoSerializer(pedido)
+        return Response(serializer)
+
+    def post(self, request, *args, **kwargs):
+        datos_pedido = request.data
+
+        print(datos_pedido)
+
+        try:
+            cliente = Cliente.objects.get(id_cliente=datos_pedido['fk_cliente'])
+        except Cliente.DoesNotExist:
+            cliente=None
+
+        try:
+            centro_distribucion = Centro_distribucion.objects.get(
+                id_centro_distribucion=datos_pedido['fk_centro_distribucion'])
+        except Centro_distribucion.DoesNotExist:
+            centro_distribucion=None
+
+        try:
+            sucursal = Sucursal.objects.get(id_sucursal=datos_pedido['fk_sucursal'])
+        except Sucursal.DoesNotExist:
+            sucursal = None
+
+        try:
+            empresa_asociada = Empresa_asociada.objects.get(id_empresa_asociada=datos_pedido['fk_empresa_asociada'])
+        except Empresa_asociada.DoesNotExist:
+            empresa_asociada=None
+
+
+
+        nuevo_pedido = Pedido(
+            fk_cliente=cliente,
+            fecha_gen_pedido=datos_pedido['fecha_gen_pedido'],
+            hora_gen_pedido=datos_pedido['hora_gen_pedido'],
+            fecha_surte_pedido=None,
+            hora_surte_pedido=None,
+            es_urgente=datos_pedido['es_urgente'],
+            fk_sucursal=sucursal,
+            fk_centro_distribucion=centro_distribucion,
+        )
+
+        nuevo_pedido.save()
+
+        nuevo_detalle = Detalle_pedido(
+            fk_pedido=nuevo_pedido
+        )
+        nuevo_detalle.save()
+
+        #nuevo_detalle.fk_pedido.add(nuevo_pedido)
+
+        proveedor = Proveedor.objects.get(id_proveedor=datos_pedido['fk_proveedor'])
+        nuevo_detalle.fk_proveedor.add(proveedor)
+
+        for art in datos_pedido['fk_articulo']:
+            articulo = Articulo.objects.get(id_articulo=art['fk_articulo'])
+            print(articulo)
+            nuevo_detalle.fk_articulo.add(articulo)
+
+        serializer = DetallePedidoSerializer(nuevo_detalle)
+        return Response(serializer.data)
+
 class Detalle_PedidoView(APIView):
     class_serializer = DetallePedidoSerializer
 
@@ -252,16 +371,12 @@ class Detalle_PedidoView(APIView):
             serializer = DetallePedidoSerializer(detalle_pedido, many=True)
             return Response(serializer.data)
 
-    def post(self, request, *args, **kwargs):
-        pass
-
 
 class Articulo_en_proveedorView(APIView):
-
     class_serializer = Articulo_en_proveedorSerializer
 
     def get(self, request, id=None):
-
+        '''Mediante a una consulta en la URL {id}, podemos averiguar que que proveedor surte el articulo consultado'''
         if id:
             try:
                 articulo = Articulo.objects.get(id_articulo=id)
@@ -280,7 +395,7 @@ class Articulo_en_proveedorView(APIView):
 
             cursor = connection.cursor()
             cursor.execute(sql)
-            if cursor.rowcount!=0:
+            if cursor.rowcount != 0:
                 articulos_en_proveedor = []
                 for p in cursor.fetchall():
                     proveedor = {
@@ -294,7 +409,6 @@ class Articulo_en_proveedorView(APIView):
             return Response({'status': 'el articulo no es surtido por ningun proveedor'})
         else:
             return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
-
 
     def post(self, request, *args, **kwargs):
 
@@ -340,7 +454,7 @@ class Proveedor_tiene_articuloView(APIView):
 
             cursor = connection.cursor()
             cursor.execute(sql)
-            if cursor.rowcount!=0:
+            if cursor.rowcount != 0:
                 proveedor_tiene_articulos = []
                 for a in cursor.fetchall():
                     articulos = {
@@ -355,7 +469,6 @@ class Proveedor_tiene_articuloView(APIView):
             return Response({'status': 'proveedor no surte ningun articulo'})
         else:
             return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
-
 
     def post(self, request, *args, **kwargs):
 

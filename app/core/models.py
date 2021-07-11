@@ -1,7 +1,5 @@
-from abc import ABC
 
 from django.db import models
-
 
 class Tipo_cliente(models.Model):
     id_tipo_cliente = models.AutoField(primary_key=True)
@@ -71,6 +69,7 @@ class Centro_distribucion(models.Model):
 class Pedido(models.Model):
 
     id_pedido = models.AutoField(primary_key=True)
+    fk_cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True)
     fecha_gen_pedido = models.DateField()
     hora_gen_pedido = models.CharField(max_length=45)
     fecha_surte_pedido = models.DateField(null=True)

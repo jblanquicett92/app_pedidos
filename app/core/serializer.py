@@ -1,6 +1,9 @@
 from rest_framework import serializers
 from .models import Tipo_cliente, Cliente, Articulo, Proveedor, Empresa_asociada
 from .models import Sucursal, Centro_distribucion, Pedido, Detalle_pedido
+from django.contrib.postgres.fields import JSONField
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 class Tipo_clienteSerializer(serializers.ModelSerializer):
 
@@ -16,11 +19,14 @@ class ClienteSerializer(serializers.ModelSerializer):
 
         depth = 1
 
+
+
 class ArticuloSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Articulo
         fields = ("__all__")
+
 
 class ProveedorSerializer(serializers.ModelSerializer):
 

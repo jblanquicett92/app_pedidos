@@ -1,11 +1,5 @@
-# Django Web Framework
 django==3.2.5
-
-# Django Cors Headers - Used to enable CORS headers in API responses,
-# and allow requests to be made to your API server from other origins.
 django-cors-headers==3.5.0
-
-# Django Rest Framework - Api Logic
 djangorestframework==3.12.4
-
 psycopg2>=2.7.5, <2.8.0
+drf-yasg
