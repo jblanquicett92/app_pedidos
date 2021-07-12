@@ -25,7 +25,7 @@ from .models import Sucursal, Centro_distribucion, Pedido, Detalle_pedido
 from django.db import connection
 from django.db.utils import DataError
 
-error_general=openapi.Response(
+error_general = openapi.Response(
         description="",
         examples={
             "application/json": {
@@ -34,6 +34,7 @@ error_general=openapi.Response(
             }
         }
 )
+
 
 class tipo_clienteView(APIView):
 
@@ -44,6 +45,7 @@ class tipo_clienteView(APIView):
 
 
 ##------------------- FIN DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
 
     @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
@@ -108,7 +110,6 @@ class clienteView(APIView):
     response_ok = openapi.Response(
         'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class)
 
-
     ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
 
     @swagger_auto_schema(responses={200: response_ok, 400: error_general})
@@ -160,7 +161,6 @@ class clienteView(APIView):
     response_ok = openapi.Response('',
                                    serializer_class
                                    )
-
 
     ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
 
@@ -243,7 +243,6 @@ class ArticuloView(APIView):
     response_ok = openapi.Response(
         '', serializer_class)
 
-
     ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
 
     @swagger_auto_schema(manual_parameters=[codigo, descripcion, precio], responses={200: response_ok, 400: error_general})
@@ -312,15 +311,13 @@ class ProveedorView(APIView):
                                     type=openapi.TYPE_STRING,
                                     required=False
                                     )
- 
+
     response_ok = openapi.Response(
         '', serializer_class)
 
-    
     ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
 
     @swagger_auto_schema(manual_parameters=[nombre, direccion], responses={200: response_ok, 400: error_general})
-
     def post(self, request, *args, **kwargs):
 
         proveedor_datos = request.data
@@ -350,6 +347,14 @@ class ProveedorView(APIView):
 class Empresa_asociadaView(APIView):
     serializer_class = Empresa_asociadaSerializer
 
+    ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
         if id:
             try:
@@ -365,23 +370,62 @@ class Empresa_asociadaView(APIView):
                 empresa_asociada, many=True)
             return Response(serializer.data)
 
+        ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    referencia = openapi.Parameter('referencia',
+                               in_=openapi.IN_QUERY,
+                               description='[Alfanumérico] por ejemplo: CATY CAZ2-111',
+                               type=openapi.TYPE_STRING,
+                               required=False
+                               )
+    codigo_socio = openapi.Parameter('codigo_socio',
+                                    in_=openapi.IN_QUERY,
+                                    description='[Entero] por ejemplo: 222668',
+                                    type=openapi.TYPE_INTEGER,
+                                    required=False
+                                    )
+
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @swagger_auto_schema(manual_parameters=[referencia, codigo_socio], responses={200: response_ok, 400: error_general})
     def post(self, request, *args, **kwargs):
 
         empresa_asociada_datos = request.data
 
-        nueva_empresa_asociada = Empresa_asociada(
-            referencia=empresa_asociada_datos['referencia'],
-            codigo_socio=empresa_asociada_datos['codigo_socio'],
-        )
+        try:
+            nueva_empresa_asociada = Empresa_asociada(
+                referencia=empresa_asociada_datos['referencia'],
+                codigo_socio=empresa_asociada_datos['codigo_socio'],
+            )
 
-        nueva_empresa_asociada.save()
-        serialize = Empresa_asociadaSerializer(nueva_empresa_asociada)
-        return Response(serialize.data)
+            nueva_empresa_asociada.save()
+            serializer = Empresa_asociadaSerializer(nueva_empresa_asociada)
+        except KeyError:
+            return Response({'detail': 'Una o mas llaves del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            return Response({'detail': 'Uno o mas atributos del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except DataError:
+            return Response({'detail': 'Uno o mas atributos del objeto son muy largos'}, status=status.HTTP_400_BAD_REQUEST)
+        except TypeError:
+            return Response({'detail': 'No esta recibiendo argumentos validos'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'detail': 'Objeto JSON desconcocido, ver documentación'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.data)
 
 
 class SucursalView(APIView):
     serializer_class = SucursalSerializer
 
+        ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
         if id:
             try:
@@ -395,23 +439,62 @@ class SucursalView(APIView):
             serializer = SucursalSerializer(sucursal, many=True)
             return Response(serializer.data)
 
+        ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    referencia = openapi.Parameter('referencia',
+                               in_=openapi.IN_QUERY,
+                               description='[Alfanumérico] por ejemplo: Avance Mirasierra',
+                               type=openapi.TYPE_STRING,
+                               required=False
+                               )
+    codigo_sucursal = openapi.Parameter('codigo_sucursal',
+                                    in_=openapi.IN_QUERY,
+                                    description='[Entero] por ejemplo: 222668',
+                                    type=openapi.TYPE_INTEGER,
+                                    required=False
+                                    )
+
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @swagger_auto_schema(manual_parameters=[referencia, codigo_sucursal], responses={200: response_ok, 400: error_general})
     def post(self, request, *args, **kwargs):
 
         sucursal_datos = request.data
 
-        nueva_sucursal = Sucursal(
-            referencia=sucursal_datos['referencia'],
-            codigo_sucursal=sucursal_datos['codigo_sucursal'],
-        )
+        try:
+            nueva_sucursal = Sucursal(
+                referencia=sucursal_datos['referencia'],
+                codigo_sucursal=sucursal_datos['codigo_sucursal'],
+            )
 
-        nueva_sucursal.save()
-        serialize = SucursalSerializer(nueva_sucursal)
-        return Response(serialize.data)
+            nueva_sucursal.save()
+            serializer = SucursalSerializer(nueva_sucursal)
+        except KeyError:
+            return Response({'detail': 'Una o mas llaves del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            return Response({'detail': 'Uno o mas atributos del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except DataError:
+            return Response({'detail': 'Uno o mas atributos del objeto son muy largos'}, status=status.HTTP_400_BAD_REQUEST)
+        except TypeError:
+            return Response({'detail': 'No esta recibiendo argumentos validos'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'detail': 'Objeto JSON desconcocido, ver documentación'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.data)
 
 
 class Centro_distribucionView(APIView):
     serializer_class = Centro_distribucionSerializer
 
+        ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
         if id:
             try:
@@ -426,23 +509,57 @@ class Centro_distribucionView(APIView):
             serializer = Centro_distribucionSerializer(sucursal, many=True)
             return Response(serializer.data)
 
+        ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    almacen = openapi.Parameter('almacen',
+                               in_=openapi.IN_QUERY,
+                               description='[Alfanumérico] por ejemplo: Las acacias',
+                               type=openapi.TYPE_STRING,
+                               required=False
+                               )
+
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @swagger_auto_schema(manual_parameters=[almacen], responses={200: response_ok, 400: error_general})
     def post(self, request, *args, **kwargs):
 
         centro_distribucion_datos = request.data
 
-        nueva_centro_distribucion = Centro_distribucion(
+        try:
+            nueva_centro_distribucion = Centro_distribucion(
 
-            almacen=centro_distribucion_datos['almacen'],
-        )
+                almacen=centro_distribucion_datos['almacen'],
+            )
 
-        nueva_centro_distribucion.save()
-        serialize = Centro_distribucionSerializer(nueva_centro_distribucion)
-        return Response(serialize.data)
+            nueva_centro_distribucion.save()
+            serializer = Centro_distribucionSerializer(
+                nueva_centro_distribucion)
+        except KeyError:
+            return Response({'detail': 'Una o mas llaves del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            return Response({'detail': 'Uno o mas atributos del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except DataError:
+            return Response({'detail': 'Uno o mas atributos del objeto son muy largos'}, status=status.HTTP_400_BAD_REQUEST)
+        except TypeError:
+            return Response({'detail': 'No esta recibiendo argumentos validos'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'detail': 'Objeto JSON desconcocido, ver documentación'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.data)
 
 
 class PedidoView(APIView):
-    class_serializer = PedidoSerializer
+    serializer_class = PedidoSerializer
 
+    ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
         if id:
             try:
@@ -456,25 +573,65 @@ class PedidoView(APIView):
             serializer = PedidoSerializer(pedido, many=True)
             return Response(serializer.data)
 
+     ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    fecha_surte_pedido = openapi.Parameter('fecha_surte_pedido',
+                               in_=openapi.IN_QUERY,
+                               description='[Fecha DD-MM-YYYY] por ejemplo: 2021-07-12',
+                               type=openapi.TYPE_STRING,
+                               format=openapi.FORMAT_DATE,
+                               required=False
+                               )
+    hora_surte_pedido = openapi.Parameter('hora_surte_pedido',
+                               in_=openapi.IN_QUERY,
+                               description='[Alfanumérico] por ejemplo: 10:15',
+                               type=openapi.TYPE_STRING,
+                               required=False
+                               )
+
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @swagger_auto_schema(manual_parameters=[fecha_surte_pedido, hora_surte_pedido], responses={200: response_ok, 400: error_general})
     def put(self, request, id=None, *args, **kwargs):
+
         try:
             pedido = Pedido.objects.get(id_pedido=id)
+
+            pedido_datos = request.data
+
+            pedido.fecha_surte_pedido = pedido_datos['fecha_surte_pedido']
+            pedido.hora_surte_pedido = pedido_datos['hora_surte_pedido']
+
+            pedido.save()
+            serializer = PedidoSerializer(pedido)
         except Pedido.DoesNotExist:
             return Response({'status': 'no existe ese pedido'}, status=400)
-
-        pedido_datos = request.data
-
-        pedido.fecha_surte_pedido = pedido_datos['fecha_surte_pedido']
-        pedido.hora_surte_pedido = pedido_datos['hora_surte_pedido']
-
-        pedido.save()
-        serializer = PedidoSerializer(pedido)
-        return Response(serializer)
+        except KeyError:
+            return Response({'detail': 'Una o mas llaves del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except AttributeError:
+            return Response({'detail': 'Uno o mas atributos del objeto no coinciden.'}, status=status.HTTP_400_BAD_REQUEST)
+        except DataError:
+            return Response({'detail': 'Uno o mas atributos del objeto son muy largos'}, status=status.HTTP_400_BAD_REQUEST)
+        except TypeError:
+            return Response({'detail': 'No esta recibiendo argumentos validos'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception:
+            return Response({'detail': 'Objeto JSON desconcocido, ver documentación'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.data)
 
 
 class Detalle_PedidoView(APIView):
-    class_serializer = DetallePedidoSerializer
+    serializer_class = DetallePedidoSerializer
 
+        ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})
     def get(self, request, id=None):
         if id:
             try:
@@ -492,36 +649,112 @@ class Detalle_PedidoView(APIView):
 
 class Crear_Nuevo_PedidoViewSet(viewsets.ModelViewSet):
 
-    def create(self, request, *args, **kwargs):
-        datos_pedido = request.data
+    serializer_class = DetallePedidoSerializer
 
-        print(datos_pedido)
+     ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    fk_cliente = openapi.Parameter('fk_cliente',
+                               in_=openapi.IN_QUERY,
+                               description='[id_cliente] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=False
+                               )
+    fecha_gen_pedido = openapi.Parameter('fecha_gen_pedido',
+                               in_=openapi.IN_QUERY,
+                               description='[Fecha DD-MM-YYYY] por ejemplo: 2021-07-12',
+                               type=openapi.TYPE_STRING,
+                               format=openapi.FORMAT_DATE,
+                               required=False
+    )
+    hora_gen_pedido = openapi.Parameter('hora_gen_pedido',
+                               in_=openapi.IN_QUERY,
+                               description='[Alfanumérico] por ejemplo: 10:15',
+                               type=openapi.TYPE_STRING,
+                               required=False
+    )
+    es_urgente = openapi.Parameter('es_urgente',
+                               in_=openapi.IN_QUERY,
+                               description='[Booleano] por ejemplo: False',
+                               type=openapi.TYPE_BOOLEAN,
+                               required=True
+    )
+    fk_sucursal = openapi.Parameter('fk_sucursal',
+                               in_=openapi.IN_QUERY,
+                               description='[id_sucursal] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=True
+    )
+    fk_centro_distribucion = openapi.Parameter('fk_centro_distribucion',
+                               in_=openapi.IN_QUERY,
+                               description='[id_centro_distribucion] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=True
+    )
+    fk_empresa_asociada = openapi.Parameter('fk_empresa_asociada',
+                               in_=openapi.IN_QUERY,
+                               description='[id_empresa_asociada] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=True
+    )
+    fk_proveedor = openapi.Parameter('fk_proveedor',
+                               in_=openapi.IN_QUERY,
+                               description='[id_proveedor] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=True
+    )
+    fk_articulo = openapi.Parameter('fk_articulo',
+                               in_=openapi.IN_QUERY,
+                               description='[id_articulo] por ejemplo: 1',
+                               type=openapi.TYPE_ARRAY,
+                                items=openapi.Items(type=openapi.TYPE_INTEGER),
+                               required=True
+    )
+
+
+    response_ok=openapi.Response(
+        '', serializer_class)
+
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+
+    @ swagger_auto_schema(manual_parameters=[fk_cliente, fecha_gen_pedido, hora_gen_pedido, es_urgente,
+    fk_sucursal, fk_centro_distribucion, fk_empresa_asociada, fk_proveedor, fk_articulo], responses={200: response_ok, 400: error_general})
+    def create(self, request, *args, **kwargs):
+        datos_pedido=request.data
+
+#        print(datos_pedido)
+
+
 
         try:
-            cliente = Cliente.objects.get(
+            cliente=Cliente.objects.get(
                 id_cliente=datos_pedido['fk_cliente'])
         except Cliente.DoesNotExist:
-            cliente = None
+            cliente=None
 
         try:
-            centro_distribucion = Centro_distribucion.objects.get(
+            centro_distribucion=Centro_distribucion.objects.get(
                 id_centro_distribucion=datos_pedido['fk_centro_distribucion'])
         except Centro_distribucion.DoesNotExist:
-            centro_distribucion = None
+            centro_distribucion=None
 
         try:
-            sucursal = Sucursal.objects.get(
+            sucursal=Sucursal.objects.get(
                 id_sucursal=datos_pedido['fk_sucursal'])
         except Sucursal.DoesNotExist:
-            sucursal = None
+            sucursal=None
 
         try:
-            empresa_asociada = Empresa_asociada.objects.get(
+            empresa_asociada=Empresa_asociada.objects.get(
                 id_empresa_asociada=datos_pedido['fk_empresa_asociada'])
         except Empresa_asociada.DoesNotExist:
-            empresa_asociada = None
+            empresa_asociada=None
 
-        nuevo_pedido = Pedido(
+        nuevo_pedido=Pedido(
             fk_cliente=cliente,
             fecha_gen_pedido=datos_pedido['fecha_gen_pedido'],
             hora_gen_pedido=datos_pedido['hora_gen_pedido'],
@@ -534,7 +767,7 @@ class Crear_Nuevo_PedidoViewSet(viewsets.ModelViewSet):
 
         nuevo_pedido.save()
 
-        nuevo_detalle = Detalle_pedido(
+        nuevo_detalle=Detalle_pedido(
             fk_pedido=nuevo_pedido,
             fk_cliente=nuevo_pedido.fk_cliente
 
@@ -543,49 +776,62 @@ class Crear_Nuevo_PedidoViewSet(viewsets.ModelViewSet):
 
         # nuevo_detalle.fk_pedido.add(nuevo_pedido)
 
-        proveedor = Proveedor.objects.get(
+        proveedor=Proveedor.objects.get(
             id_proveedor=datos_pedido['fk_proveedor'])
         nuevo_detalle.fk_proveedor.add(proveedor)
 
         for art in datos_pedido['fk_articulo']:
-            articulo = Articulo.objects.get(id_articulo=art['fk_articulo'])
+            articulo=Articulo.objects.get(id_articulo=art['fk_articulo'])
             print(articulo)
             nuevo_detalle.fk_articulo.add(articulo)
 
-        serializer = DetallePedidoSerializer(nuevo_detalle)
+        serializer=DetallePedidoSerializer(nuevo_detalle)
         return Response(serializer.data)
 
 
 class Listar_Pedido_UrgenteViewSet(APIView):
+    serializer_class=PedidoSerializer
+    ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'La consulta entrega una lista [ {} ]', serializer_class
+    )
 
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})    
     def get(self, request):
         '''
-        relación de pedidos urgentes a Centros de distribución que
+        Listado de pedidos urgentes a Centros de distribución que
         pertenezcan a cliente PLATINO y que aún no se han surtido
-        :param request:
-        :return: Pedido con relacion pedida
         '''
-        pedido = Pedido.objects.filter(es_urgente=True,
+        pedido=Pedido.objects.filter(es_urgente=True,
                                        fk_centro_distribucion__isnull=False,
                                        fk_cliente__fk_tipo_cliente__id_tipo_cliente=4,
                                        fecha_surte_pedido__isnull=True,
                                        )
 
-        serializer = PedidoSerializer(pedido, many=True)
+        serializer=PedidoSerializer(pedido, many=True)
         return Response(serializer.data)
 
 
 class Articulo_en_proveedorView(APIView):
-    class_serializer = Articulo_en_proveedorSerializer
+    serializer_class=Articulo_en_proveedorSerializer
 
+    ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})    
     def get(self, request, id=None):
-        '''Mediante a una consulta en la URL {id}, podemos averiguar que que proveedor surte el articulo consultado'''
+        '''Mediante a una consulta en la URL {id}, 
+           podemos averiguar que proveedor surte el articulo consultado'''
         if id:
             try:
-                articulo = Articulo.objects.get(id_articulo=id)
+                articulo=Articulo.objects.get(id_articulo=id)
             except Articulo.DoesNotExist:
                 return Response({'status': 'No existe el articulo'}, status=400)
-            sql = f'''SELECT
+            sql=f'''SELECT
 			    DISTINCT prov.id_proveedor, prov.nombre, prov.direccion
                 FROM  core_detalle_pedido as dp
                     INNER JOIN core_detalle_pedido_fk_articulo as dp_art_fk
@@ -596,12 +842,12 @@ class Articulo_en_proveedorView(APIView):
                     ON prov.id_proveedor = dp_prov_fk.proveedor_id
 		        WHERE dp_art_fk.articulo_id ={id}'''
 
-            cursor = connection.cursor()
+            cursor=connection.cursor()
             cursor.execute(sql)
             if cursor.rowcount != 0:
-                articulos_en_proveedor = []
+                articulos_en_proveedor=[]
                 for p in cursor.fetchall():
-                    proveedor = {
+                    proveedor={
                         "id_proveedor": p[0],
                         "nombre": p[1],
                         "direccion": p[2]
@@ -613,55 +859,83 @@ class Articulo_en_proveedorView(APIView):
         else:
             return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
 
+     ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    fk_proveedor = openapi.Parameter('fk_proveedor',
+                               in_=openapi.IN_QUERY,
+                               description='[id_proveedor] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               format=openapi.FORMAT_INT64,
+                               required=True
+    )
+    fk_articulo = openapi.Parameter('fk_articulo',
+                               in_=openapi.IN_QUERY,
+                               description='[id_articulo] por ejemplo: 1',
+                               type=openapi.TYPE_ARRAY,
+                                items=openapi.Items(type=openapi.TYPE_INTEGER),
+                               required=True
+    )
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    
+    @swagger_auto_schema(manual_parameters=[fk_proveedor, fk_articulo], responses={200: response_ok, 400: error_general})
     def post(self, request, *args, **kwargs):
 
-        detalle_datos = request.data
+        detalle_datos=request.data
 
-        nuevo_detalle = Detalle_pedido()
+        nuevo_detalle=Detalle_pedido()
         nuevo_detalle.save()
 
-        proveedor = Proveedor.objects.get(
+        proveedor=Proveedor.objects.get(
             id_proveedor=detalle_datos['fk_proveedor'])
         print(proveedor)
         nuevo_detalle.fk_proveedor.add(proveedor)
 
         for art in detalle_datos['fk_articulo']:
-            articulo = Articulo.objects.get(id_articulo=art['fk_articulo'])
+            articulo=Articulo.objects.get(id_articulo=art['fk_articulo'])
             print(articulo)
             nuevo_detalle.fk_articulo.add(articulo)
 
-        serializer = Articulo_en_proveedorSerializer(nuevo_detalle)
+        serializer=Articulo_en_proveedorSerializer(nuevo_detalle)
 
         return Response(serializer.data)
 
 
 class Proveedor_tiene_articuloView(APIView):
-    class_serializer = Proveedor_tiene_articuloSerializer
+    serializer_class=Proveedor_tiene_articuloSerializer
 
+    ##-------------------INICIO DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    response_ok = openapi.Response(
+        'Si la consulta es / entrega una lista [ {} ] de lo contrario si es: /{id} un objeto { }', serializer_class
+    )
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    @swagger_auto_schema(responses={200: response_ok, 400: error_general})   
     def get(self, request, id=None):
 
         if id:
             try:
-                proveedor = Proveedor.objects.get(id_proveedor=id)
+                proveedor=Proveedor.objects.get(id_proveedor=id)
             except Proveedor.DoesNotExist:
                 return Response({'status': 'No existe el proveedor'}, status=400)
-            sql = f'''SELECT 
+            sql=f'''SELECT
                         DISTINCT art.id_articulo, art.codigo, art.descripcion, art.precio
                         FROM  core_detalle_pedido as dp
                         INNER JOIN core_detalle_pedido_fk_articulo as dp_art_fk
                         ON dp.id_detalle_pedido=dp_art_fk.detalle_pedido_id
-                        INNER JOIN core_detalle_pedido_fk_proveedor as dp_prov_fk 
-                        ON dp_prov_fk.detalle_pedido_id = dp.id_detalle_pedido 
+                        INNER JOIN core_detalle_pedido_fk_proveedor as dp_prov_fk
+                        ON dp_prov_fk.detalle_pedido_id = dp.id_detalle_pedido
                         INNER JOIN core_articulo as art
                         ON art.id_articulo = dp_art_fk.articulo_id
             		WHERE dp_prov_fk.proveedor_id={id};'''
 
-            cursor = connection.cursor()
+            cursor=connection.cursor()
             cursor.execute(sql)
             if cursor.rowcount != 0:
-                proveedor_tiene_articulos = []
+                proveedor_tiene_articulos=[]
                 for a in cursor.fetchall():
-                    articulos = {
+                    articulos={
                         "id_articulo": a[0],
                         "codigo": a[1],
                         "descripcion": a[2],
@@ -674,23 +948,46 @@ class Proveedor_tiene_articuloView(APIView):
         else:
             return Response({'status': 'HTTP_400_BAD_REQUEST'}, status.HTTP_400_BAD_REQUEST)
 
+     ##-------------------Inicio  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    fk_articulo = openapi.Parameter('fk_articulo',
+                               in_=openapi.IN_QUERY,
+                               description='[id_articulo] por ejemplo: 1',
+                               type=openapi.TYPE_INTEGER,
+                               required=True
+    )
+
+    fk_proveedor = openapi.Parameter('fk_proveedor',
+                               in_=openapi.IN_QUERY,
+                               description='[id_proveedor] por ejemplo: 1',
+                               type=openapi.TYPE_ARRAY,
+                               items=openapi.Items(type=openapi.TYPE_INTEGER),
+                               
+                               required=True
+    )
+    
+    response_ok = openapi.Response(
+        '', serializer_class)
+
+    ##-------------------FIN  DOCUMENTACIÓN SWAGGER (OMITIR)--------------------------#
+    
+    @swagger_auto_schema(manual_parameters=[fk_proveedor, fk_articulo], responses={200: response_ok, 400: error_general})
     def post(self, request, *args, **kwargs):
 
-        detalle_datos = request.data
+        detalle_datos=request.data
 
-        nuevo_detalle = Detalle_pedido()
+        nuevo_detalle=Detalle_pedido()
         nuevo_detalle.save()
 
-        articulo = Articulo.objects.get(
+        articulo=Articulo.objects.get(
             id_articulo=detalle_datos['fk_articulo'])
         print(articulo)
         nuevo_detalle.fk_articulo.add(articulo)
 
         for prv in detalle_datos['fk_proveedor']:
-            proveedor = Proveedor.objects.get(id_proveedor=prv['fk_proveedor'])
+            proveedor=Proveedor.objects.get(id_proveedor=prv['fk_proveedor'])
             print(proveedor)
             nuevo_detalle.fk_proveedor.add(proveedor)
 
-        serializer = Proveedor_tiene_articuloSerializer(nuevo_detalle)
+        serializer=Proveedor_tiene_articuloSerializer(nuevo_detalle)
 
         return Response(serializer.data)

@@ -16,6 +16,8 @@ urlpatterns = [
     path('sucursal/<int:id>', views.SucursalView.as_view()),
     path('centro_distribucion/', views.Centro_distribucionView.as_view()),
     path('centro_distribucion/<int:id>', views.Centro_distribucionView.as_view()),
+    path('pedido/', views.PedidoView.as_view()),
+    path('pedido/<int:id>', views.PedidoView.as_view()),
     path('detalle_pedido/', views.Detalle_PedidoView.as_view()),
     path('detalle_pedido/<int:id>', views.Detalle_PedidoView.as_view()),
     path('proveedor_tiene_articulo/<int:id>', views.Proveedor_tiene_articuloView.as_view()),
