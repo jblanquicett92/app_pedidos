@@ -26,5 +26,4 @@ urlpatterns = [
     path('articulo_en_proveedor/<int:id>', views.Articulo_en_proveedorView.as_view()),
     path('admin_pedidos/crear_pedido/', views.Crear_Nuevo_PedidoViewSet.as_view({'post':'create'})),
     path('admin_pedidos/listar_urgente/', views.Listar_Pedido_UrgenteViewSet.as_view()),
-
 ]

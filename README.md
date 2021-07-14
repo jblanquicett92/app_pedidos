@@ -1,15 +1,14 @@
-# Mobilender Pedidos
-## _Prueba de programacion_
+# APP Pedidos
 
 [![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
  ## Inicio 🚀 
-Mobilender pedidos es una RESTful API de un sistema de pedidos recibidos desde clientes. fue creada en el ecosistema de Python:
+App pedidos es una RESTful API de un sistema de pedidos recibidos desde clientes. fue creada en el ecosistema de Python:
 
 
 ## Tech
 
-Mobilender usa varias tecnologias open source para que el proyecto funciones correctamente:
+App pedidos usa varias tecnologias open source para que el proyecto funciones correctamente:
 
 - [Python3]
 - [Django3]
@@ -21,7 +20,7 @@ Mobilender usa varias tecnologias open source para que el proyecto funciones cor
 
 ## Pre requisitos
 
-Mobilender requiere que tengas instalado Python3 y Composer.
+App pedidos requiere que tengas instalado Python3 y Composer.
 
 Si quieres contribuir o probar el proyecto, recuerda que debes descargar del repositorio este proyecto, aqui dejo un listado recomendado de comandos para que trabajes desde tu terminal favorita.
 
